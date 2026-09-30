@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>致 鸥黑米 · 生日快乐</title>
+<meta name="description" content="写给鸥黑米的一封信：一些话，和一些喜欢的图片。">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#fff6f9">
+
+<!-- 分享到微信 / QQ / 微博 时的链接预览卡片 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="致 鸥黑米 · 生日快乐">
+<meta property="og:description" content="有些话，想慢慢说给你听。">
+<meta property="og:image" content="assets/cover.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3c6 3 9 7 9 12 0 5-4 9-9 12-5-3-9-7-9-12 0-5 3-9 9-12z' fill='%23f7a8c8'/%3E%3Cpath d='M16 7v18' stroke='%23fff' stroke-width='1.4'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/wenkai-subset.woff2" crossorigin>
+<link rel="preload" as="image" href="assets/img/p1.jpg">
+<link rel="preload" as="image" href="assets/img/p2.jpg">
+</head>
+<body>
+
+<!-- ⓪ 开场加载 -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="ld-petal"><i></i><i></i><i></i><i></i><i></i></div>
+  <p class="ld-text">正在为你准备这份心意</p>
+  <div class="ld-bar"><i id="ldBar"></i></div>
+  <p class="ld-pct" id="ldPct">0%</p>
+</div>
+
+<!-- ① 樱花与光（全局背景） -->
+<div class="sky" aria-hidden="true"><span></span><span></span><span></span></div>
+<canvas id="petals" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+
+<!-- ② 顶栏 -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">✉</span>
+    <span class="brand-text">致 <b>鸥黑米</b></span>
+  </div>
+  <div class="music-box">
+    <button id="musicBtn" class="music-btn" aria-label="播放或暂停背景音乐" aria-pressed="false">
+      <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="music-name" id="musicName">生日快乐歌（纯音乐）</span>
+    </button>
+    <button id="musicSwap" class="music-swap" title="切换曲目" aria-label="切换曲目">⇄</button>
+  </div>
+</header>
+
+<main id="stage">
+
+  <!-- ═══════════ 开屏 · 信封 ═══════════ -->
+  <section class="scene scene-open is-active" id="scene-open" data-scene="0" aria-label="开启信封">
+    <div class="open-inner">
+      <p class="open-kicker">一封写给你的信</p>
+      <h1 class="open-title">
+        <span class="ch">致</span><span class="ch sp"></span><span class="ch">鸥</span><span class="ch">黑</span><span class="ch">米</span>
+      </h1>
+
+      <div class="env-stage">
+        <div class="env-halo" aria-hidden="true"></div>
+        <button class="envelope" id="envelope" aria-label="轻触信封，开启这份心意">
+          <!-- 信纸 -->
+          <div class="env-letter" id="envLetter">
+            <div class="letter-card">
+              <div class="letter-rule" aria-hidden="true"></div>
+              <p class="letter-lead">有些话，想慢慢说给你听。</p>
+              <div class="letter-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <!-- 信封本体 -->
+          <div class="env-body" aria-hidden="true"><span class="env-pocket"></span></div>
+          <div class="env-flap-l" aria-hidden="true"></div>
+          <div class="env-flap-r" aria-hidden="true"></div>
+          <div class="env-flap-b" aria-hidden="true"></div>
+          <div class="env-flap-t" id="envFlapT" aria-hidden="true"></div>
+          <div class="env-seal" id="envSeal" aria-hidden="true"><span>鸥</span></div>
+        </button>
+        <div class="env-burst" id="envBurst" aria-hidden="true"></div>
+      </div>
+
+      <p class="open-hint" id="openHint">轻触信封，开启这份心意</p>
+    </div>
+  </section>
+
+  <!-- ═══════════ 壹 · 缘起（1.jpg） ═══════════ -->
+  <section class="scene scene-split" id="scene-one" data-scene="1" aria-label="壹 缘起">
+    <div class="split">
+      <div class="col-text">
+        <div class="scene-label"><i></i>壹 · 缘起</div>
+        <h2 class="poem" data-split>像天外来物一样，</h2>
+        <h2 class="poem" data-split>这是否也是命运的齿轮咬合的时刻呢？</h2>
+        <div class="gear-motif" aria-hidden="true">
+          <svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="1.1">
+            <g class="gear g1">
+              <circle cx="62" cy="60" r="18"/><circle cx="62" cy="60" r="7"/>
+              <path d="M62 34v-9M62 86v9M36 60h-9M88 60h9M44 42l-6-6M80 78l6 6M80 42l6-6M44 78l-6 6"/>
+            </g>
+            <g class="gear g2">
+              <circle cx="128" cy="74" r="14"/><circle cx="128" cy="74" r="5.5"/>
+              <path d="M128 54v-7M128 94v7M108 74h-7M148 74h7M114 60l-5-5M142 88l5 5M142 60l5-5M114 88l-5 5"/>
+            </g>
+          </svg>
+        </div>
+        <p class="poem-soft" data-split>好幸运当时孤独的我能鼓起勇气说出那句话</p>
+      </div>
+
+      <div class="col-shot">
+        <div class="device-tilt" data-tilt>
+          <div class="device" id="device1" data-parallax="0.5" role="button" tabindex="0" aria-label="看聊天记录大图">
+            <div class="device-glow" aria-hidden="true"></div>
+            <div class="device-screen">
+              <div class="device-scroll" id="scroll1"><img src="assets/img/p1.jpg" alt="我们的聊天记录"></div>
+              <div class="device-sheen" aria-hidden="true"></div>
+            </div>
+            <div class="device-bar" aria-hidden="true"></div>
+          </div>
+        </div>
+        <p class="shot-cap">我们的第一段对话　·　1.jpg　·　点一下看大图</p>
+      </div>
+    </div>
+    <div class="scroll-tip" aria-hidden="true">滚动 / 滑动，继续 ↕</div>
+  </section>
+
+  <!-- ═══════════ 贰 · 心之所向（十二张插画演出） ═══════════ -->
+  <section class="scene scene-gallery" id="scene-gallery" data-scene="2" aria-label="贰 心之所向">
+    <div class="gal-blur" id="galBlur" aria-hidden="true"></div>
+    <div class="gal-stage" id="galStage"></div>
+    <div class="gal-veil" aria-hidden="true"></div>
+
+    <div class="gal-head">
+      <div class="scene-label"><i></i>贰 · 心之所向</div>
+      <p class="gal-sub">这些，都是你喜欢的世界</p>
+    </div>
+
+    <div class="gal-foot">
+      <div class="gal-count">
+        <span id="galNow">01</span><em>/</em><span id="galTotal">12</span>
+        <button class="gal-zoom" id="galZoom" type="button">看大图</button>
+      </div>
+      <div class="gal-film" id="galFilm"></div>
+    </div>
+    <div class="gal-progress" aria-hidden="true"><i id="galBar"></i></div>
+  </section>
+
+  <!-- ═══════════ 叁 · 回响（2.jpg） ═══════════ -->
+  <section class="scene scene-split scene-flip" id="scene-two" data-scene="3" aria-label="叁 回响">
+    <div class="split">
+      <div class="col-shot">
+        <div class="device-tilt" data-tilt>
+          <div class="device is-pink" id="device2" data-parallax="0.5" role="button" tabindex="0" aria-label="看聊天记录大图">
+            <div class="device-glow" aria-hidden="true"></div>
+            <div class="device-screen">
+              <div class="device-scroll" id="scroll2"><img src="assets/img/p2.jpg" alt="我们的聊天记录"></div>
+              <div class="device-sheen" aria-hidden="true"></div>
+            </div>
+            <div class="device-bar" aria-hidden="true"></div>
+          </div>
+        </div>
+        <p class="shot-cap">还是这段对话　·　2.jpg　·　点一下看大图</p>
+      </div>
+
+      <div class="col-text">
+        <div class="scene-label"><i></i>叁 · 回响</div>
+        <h2 class="poem" data-split>这里现在再看到还是会偷笑啊，</h2>
+        <h2 class="poem" data-split>要不干脆当传家宝传递下去算了？</h2>
+        <div class="hearts" aria-hidden="true">
+          <span>♡</span><span>♡</span><span>♡</span>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-tip" aria-hidden="true">滚动 / 滑动，继续 ↕</div>
+  </section>
+
+  <!-- ═══════════ 肆 · 许愿（蛋糕与蜡烛） ═══════════ -->
+  <section class="scene scene-wish" id="scene-wish" data-scene="4" aria-label="肆 许愿">
+    <div class="wish-inner">
+      <div class="scene-label"><i></i>肆 · 许愿</div>
+      <p class="wish-hint" id="wishHint">点击蜡烛，把它点亮</p>
+
+      <div class="cake-stage">
+        <div class="candle-halo" id="candleHalo" aria-hidden="true"></div>
+        <div class="cake" id="cake">
+          <div class="candle-row" id="candleRow"></div>
+          <div class="tier tier-top"><span class="icing"></span><span class="sprinkles"></span></div>
+          <div class="tier tier-mid"><span class="icing"></span><span class="sprinkles"></span></div>
+          <div class="tier tier-bot"><span class="icing"></span><span class="sprinkles"></span></div>
+          <div class="cake-plate"></div>
+          <div class="cake-shadow" aria-hidden="true"></div>
+        </div>
+        <div class="cake-sparks" id="cakeSparks" aria-hidden="true"></div>
+      </div>
+
+      <!-- 弹出的小信封：写愿望 -->
+      <div class="wish-card" id="wishCard" role="dialog" aria-modal="false" aria-label="写下你的愿望">
+        <div class="wc-body">
+          <div class="wc-flap" aria-hidden="true"></div>
+          <div class="wc-seal" aria-hidden="true">愿</div>
+          <p class="wc-title">许个愿吧</p>
+          <input class="wc-input" id="wishInput" type="text" maxlength="40" autocomplete="off"
+                 placeholder="写在这里…" aria-label="你的愿望">
+          <p class="wc-tip" id="wcTip">愿望会随着纸飞机飞出窗外，也许会飘到我这里</p>
+          <div class="wc-actions">
+            <button class="btn btn-main" id="wishSend">寄出</button>
+            <button class="btn btn-ghost" id="wishSkip">先不写</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="plane-wrap" id="planeWrap" aria-hidden="true">
+      <svg class="plane-trail" id="planeTrail" preserveAspectRatio="none">
+        <path id="trailPath" d="" fill="none"/>
+      </svg>
+      <div class="plane" id="plane">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <path class="p1" d="M2 30 L62 6 L40 58 L30 38 Z"/>
+          <path class="p2" d="M30 38 L62 6 L26 26 Z"/>
+        </svg>
+        <span class="plane-note" id="planeNote"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ 伍 · 予你（背景图片 + 祝福语） ═══════════ -->
+  <section class="scene scene-final" id="scene-three" data-scene="5" aria-label="伍 予你">
+    <div class="final-bg" id="finalBg" aria-hidden="true"></div>
+    <div class="final-bg b2" id="finalBg2" aria-hidden="true"></div>
+    <div class="final-mask" aria-hidden="true"></div>
+    <div class="float-frames" id="floatFrames" aria-hidden="true"></div>
+
+    <div class="final-inner">
+      <div class="scene-label scene-label--center"><i></i>伍 · 予你</div>
+
+      <h1 class="bless-title" data-split>亲爱的鸥黑米，生日快乐！</h1>
+
+      <div class="bless-flow">
+        <p class="bless-line" data-line>谢谢你愿意听我讲话，</p>
+        <p class="bless-line" data-line>希望以后的日子里，我们生命中依然有彼此的痕迹，</p>
+      </div>
+
+      <p class="bless-close" data-split>希望你可以快快乐乐的，骄傲的迎接每一天！</p>
+
+      <div class="wish-echo" id="wishEcho" hidden>
+        <span class="we-icon" aria-hidden="true">✉</span>
+        <span class="we-label">你的愿望，已经寄出去了</span>
+        <span class="we-text" id="wishEchoText"></span>
+        <a class="we-mail" id="wishMail" href="#" title="用邮件把愿望发给我">发邮件给我</a>
+        <button class="we-copy" id="wishCopy" type="button">复制</button>
+      </div>
+
+      <div class="final-sign" aria-hidden="true">— 生日快乐 —</div>
+
+      <div class="final-actions">
+        <button class="btn btn-main" id="replay">再看一次</button>
+        <button class="btn btn-ghost" id="replayWish">重新许愿</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ③ 场景导航 -->
+<nav class="rail" id="rail" aria-label="场景导航">
+  <div class="rail-dots" id="railDots"></div>
+</nav>
+<div class="pager" id="pager">
+  <button class="pager-btn" id="prevBtn" aria-label="上一幕">‹</button>
+  <button class="pager-btn" id="nextBtn" aria-label="下一幕">›</button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ④ 看大图 -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="看大图" hidden>
+  <button class="lb-close" id="lbClose" aria-label="关闭">×</button>
+  <button class="lb-prev" id="lbPrev" aria-label="上一张">‹</button>
+  <button class="lb-next" id="lbNext" aria-label="下一张">›</button>
+  <img id="lbImg" alt="">
+  <div class="lb-cap" id="lbCap"></div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
