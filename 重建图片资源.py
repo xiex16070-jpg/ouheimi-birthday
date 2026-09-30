@@ -59,6 +59,10 @@ if os.path.exists(src_font):
                 pass
     for c in range(0x20, 0x7F):
         chars.add(chr(c))
+    # 日文假名 + 中日标点（叁·回响 里有一行日文小字）
+    for rng in ((0x3040, 0x30FF), (0x3000, 0x303F), (0xFF01, 0xFF60)):
+        for c in range(rng[0], rng[1] + 1):
+            chars.add(chr(c))
     for c in "　、。〈〉《》「」『』【】〔〕！（），：；？…—～·×÷°′″€¥£§©®™←↑→↓↔■□●○◆◇★☆♡♥✔✉☀☁❀✦":
         chars.add(c)
     keep = "".join(sorted(chars))

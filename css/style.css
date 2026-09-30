@@ -353,6 +353,11 @@ body.idle .topbar,body.idle .rail,body.idle .pager{opacity:.4}
   margin:.5em 0 0;font-size:clamp(14px,1.5vw,19px);line-height:2;letter-spacing:.12em;color:var(--ink-2);
   padding-left:18px;border-left:1px solid var(--line);text-shadow:0 1px 0 rgba(255,255,255,.7);
 }
+.poem-jp{
+  margin:.85em 0 0;font-size:clamp(12px,1.3vw,16.5px);line-height:1.9;
+  letter-spacing:.15em;color:var(--rose-deep);opacity:.82;
+  text-shadow:0 1px 0 rgba(255,255,255,.7);
+}
 .gear-motif{width:min(190px,38%);color:rgba(195,144,78,.55);margin:clamp(8px,2vh,20px) 0 0}
 .gear-motif svg{width:100%;height:auto;display:block}
 .gear{transform-box:fill-box;transform-origin:center}
