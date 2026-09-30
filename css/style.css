@@ -676,19 +676,7 @@ body.idle .topbar,body.idle .rail,body.idle .pager{opacity:.4}
 }
 .wish-echo[hidden]{display:none}
 .wish-echo .we-icon{color:var(--rose)}
-.wish-echo .we-text{color:var(--rose-deep);max-width:46vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.we-mail{
-  padding:5px 13px;border-radius:999px;text-decoration:none;cursor:pointer;white-space:nowrap;
-  font-size:11.5px;letter-spacing:.16em;color:#fff;
-  background:linear-gradient(118deg,#f7a8c8,#e2769f);
-  box-shadow:0 8px 18px -10px rgba(198,94,136,.9);transition:.3s;
-}
-.we-mail:hover{transform:translateY(-1px);box-shadow:0 12px 22px -10px rgba(198,94,136,1)}
-.we-copy{
-  padding:5px 13px;border-radius:999px;cursor:pointer;font-size:11.5px;letter-spacing:.16em;
-  color:var(--rose-deep);background:rgba(255,255,255,.95);border:1px solid var(--line);transition:.3s;
-}
-.we-copy:hover{background:#fff;border-color:var(--rose);transform:translateY(-1px)}
+.wish-echo .we-text{color:var(--rose-deep);max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .final-sign{margin-top:clamp(20px,4vh,34px);font-size:12px;letter-spacing:.62em;text-indent:.62em;color:var(--ink-3)}
 .final-actions{display:flex;justify-content:center;gap:12px;margin-top:clamp(16px,3vh,26px);flex-wrap:wrap}
 
@@ -830,7 +818,6 @@ body.idle .topbar,body.idle .rail,body.idle .pager{opacity:.4}
   .music-name{display:none}
   .open-title{letter-spacing:.18em}
   .toast{font-size:12px;letter-spacing:.08em}
-  .we-copy{padding:4px 10px}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.15s !important}

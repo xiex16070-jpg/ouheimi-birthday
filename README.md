@@ -47,20 +47,39 @@ Branch 选 `main` + `/ (root)`，保存。等 1 分钟，访问 `https://<你的
 > 若放到子目录部署（如 `https://xxx.github.io/birthday/ouheimi/`），把 `index.html` 里的
 > `assets/cover.jpg` 换成完整网址即可（OG 图需要绝对路径）。
 
-## 愿望回传（TA 写下的愿望怎么给你，收件邮箱已设为 2103886050@qq.com）
+## 三、愿望回传（TA 写下的愿望怎么悄悄到你手里）
 
-**开箱即用（无需任何配置）**：TA 许愿后，第五幕的愿望胶囊上有两个按钮
-- **「发邮件给我」**：点一下，TA 的邮件客户端会带着愿望正文直接打开，TA 按发送即到你的 QQ 邮箱
-- **「复制」**：复制愿望原文，TA 随手发你
+**TA 那边完全无感**：许愿后页面上不会出现任何「发邮件」「复制」「已发送」之类的按钮或字眼，
+愿望在后台直接送出（演出里只有一句「你的愿望，已经随着纸飞机飞走了」）。
 
-**另外两条路**：
-- **愿望链接**：TA 许愿后地址会变成 `你的网址/#wish=xxxx`，TA 把这个链接发你，你打开就能看到愿望
-- **全自动发信（可选，2 分钟）**：去 <https://web3forms.com> 输入 2103886050@qq.com → 复制给你的 access_key → 填进 `js/app.js` 顶部：
-  ```js
-  wish: { provider: 'web3forms', email: '2103886050@qq.com', key: 'paste-your-key', endpoint: '' }
-  ```
-  之后 TA 一提交，愿望就自动寄到你邮箱，不用 TA 再点任何东西。
-  （`formsubmit.co`、`formspree`、你自己的后端接口也都支持，见 `js/app.js` 里的注释；formsubmit 目前服务端返回 500，暂不可用。）
+**你怎么收到 —— 三个途径，同时生效：**
+
+1. **收件箱页（最直接）**：打开 <https://xiex16070-jpg.github.io/ouheimi-birthday/inbox-9f3k2q.html>
+   （本地就是 `site/inbox-9f3k2q.html`）。页面会列出云端收到的每条愿望，还有「通道自检」按钮。
+   > 这个页面没有任何地方链接它，只有你知道地址。云端默认通道 ntfy 只保留 **12 小时**，所以别拖太久。
+2. **手机推送（推荐，能长期留存）**：手机装 [ntfy](https://ntfy.sh/) App → 订阅主题
+   `wish-ea0728407aae42b46894be3d` → 以后 TA 一许愿，你手机立刻响，消息永久留在手机上。
+3. **换成更稳的通道（推荐至少配一个）**：在 `js/app.js` 顶部的 `CFG.wish` 里填任意一个，填上就自动启用，
+   多个通道会同时发送，**任一成功即算送达**：
+   | 字段 | 填什么 | 效果 |
+   |---|---|---|
+   | `feishu` | 飞书群「自定义机器人」webhook | 国内最稳，手机秒推 |
+   | `serverchan` | `https://sctapi.ftqq.com/你的SendKey.send` | 推到微信 |
+   | `pushplus` | pushplus 的 token | 推到微信 |
+   | `emailKey` | web3forms.com 给的 access_key（收件邮箱 2103886050@qq.com） | 直接进邮箱 |
+   | `endpoint` | 你自己的接口（Cloudflare Worker / 云函数） | 收到 `{wish, at, from}` 的 POST |
+
+**兜底**：愿望同时被写进地址栏 `你的网址/#wish=xxxx`，TA 只要把那个网址发你，你打开就能看到原文。
+
+**送不出去怎么办**：任何一个通道失败都不会影响演出；这条愿望会排队，**TA 下次打开网页时自动补发**。
+
+**关于隐私（要清楚）**：仓库是公开的，主题名/接口地址写在公开的 `js/app.js` 里，
+所以「读了源码的人」理论上能订阅这个 ntfy 主题（只能看到愿望，看不到你的密码）。
+想彻底避免这一点，就配一个推送通道（飞书/Server酱/邮箱这类链接即使被人看到，对方也只能发垃圾消息，读不到历史）。
+配好后可以把 `ntfy` 那行删掉或留作备用。
+
+> 不要再用 `formsubmit.co`：实测服务端返回 500，已确认不可用。
+> 老的「愿望胶囊上有发邮件/复制按钮」的做法已删除，`provider`/`key` 字段也不再使用。
 
 ## 四、改东西
 
@@ -73,9 +92,10 @@ Branch 选 `main` + `/ (root)`，保存。等 1 分钟，访问 `https://<你的
 ## 五、目录
 
 ```
-index.html            页面结构
+index.html            页面结构（演出）
+inbox-9f3k2q.html     愿望收件箱（只有你知道这个地址，没有页面链接它）
 css/style.css         全部样式与动画
-js/app.js             演出脚本 + 愿望回传
+js/app.js             演出脚本 + 愿望回传（顶部 CFG.wish 配置所有通道）
 assets/img/           图片（已压缩）
 assets/audio/         两首背景音乐
 assets/fonts/         霞鹜文楷子集（含 3755 常用字，约 860KB）

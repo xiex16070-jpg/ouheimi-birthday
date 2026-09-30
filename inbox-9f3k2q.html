@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>愿望收件箱</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{--rose:#e2769f;--rose-deep:#b8506f;--ink:#3b2b33;--ink2:#6d5a63;--line:#f0d6e0;--bg:#fff7fa}
+  *{box-sizing:border-box}
+  body{margin:0;padding:22px 16px 60px;background:linear-gradient(180deg,#fffafc,#fdeef4);
+       color:var(--ink);font:15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:760px;margin:0 auto}
+  h1{margin:0 0 4px;font-size:20px;letter-spacing:.16em;color:var(--rose-deep)}
+  .sub{margin:0 0 18px;font-size:12.5px;color:var(--ink2);letter-spacing:.06em}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px}
+  button{padding:7px 15px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--rose-deep);
+         font-size:12.5px;letter-spacing:.1em;cursor:pointer;transition:.2s}
+  button:hover{border-color:var(--rose);transform:translateY(-1px)}
+  button.main{color:#fff;background:linear-gradient(118deg,#f7a8c8,#e2769f);border-color:transparent}
+  #status{font-size:12px;color:var(--ink2)}
+  section{margin:0 0 26px}
+  h2{margin:0 0 10px;font-size:13px;letter-spacing:.2em;color:var(--rose-deep);font-weight:600}
+  h2 small{font-weight:400;color:var(--ink2);letter-spacing:.02em;margin-left:8px;font-size:11.5px}
+  ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+  li{padding:12px 15px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 20px -16px rgba(198,94,136,.7)}
+  .wish{font-size:16px;letter-spacing:.06em;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+  .wish.empty{color:var(--ink2);font-style:italic}
+  .meta{margin-top:6px;font-size:11.5px;color:var(--ink2);letter-spacing:.04em}
+  .tag{display:inline-block;margin-right:6px;padding:1px 7px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:11px}
+  .tag.bad{color:#a2455c;border-color:#f2c4d2}
+  .tag.good{color:#3f7d54;border-color:#cfe6d6}
+  .empty-tip{padding:14px 16px;border-radius:14px;border:1px dashed var(--line);color:var(--ink2);font-size:13px}
+  input{width:100%;padding:9px 13px;border-radius:10px;border:1px solid var(--line);font-size:14px;font-family:inherit}
+  .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  #decoded{margin:10px 0 0;font-size:15px;color:var(--rose-deep);white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>愿望收件箱</h1>
+  <p class="sub">只有你（站长）需要打开这里 · 页面不参与演出、也没有任何链接指向它</p>
+
+  <div class="bar">
+    <button class="main" id="refresh">刷新</button>
+    <button id="test">通道自检（发一条测试）</button>
+    <span id="status"></span>
+  </div>
+
+  <section>
+    <h2>云端收到的愿望<small>来自 ntfy 主题，只保留最近 12 小时</small></h2>
+    <div id="cloud"><div class="empty-tip">还没有收到愿望。</div></div>
+  </section>
+
+  <section>
+    <h2>本机记录<small>只在这台设备的这个浏览器里，仅作诊断用</small></h2>
+    <div id="local"><div class="empty-tip">这台设备上没有记录。</div></div>
+  </section>
+
+  <section>
+    <h2>解码一个 #wish= 链接</h2>
+    <input id="link" placeholder="把 TA 转发给你的完整网址粘在这里（含 #wish=…）" autocomplete="off">
+    <div class="row"><button id="decode">看看 TA 写了什么</button></div>
+    <p id="decoded"></p>
+  </section>
+
+  <section>
+    <h2>还能怎么收到<small>在 js/app.js 的 CFG.wish 里填上任一个即可自动启用</small></h2>
+    <ul>
+      <li><span class="wish">飞书群自定义机器人 webhook</span><div class="meta">国内网络稳、手机秒推，最推荐。填 <b>feishu</b>。</div></li>
+      <li><span class="wish">Server酱 / pushplus</span><div class="meta">直接推到微信。<b>serverchan</b> 填 <code>https://sctapi.ftqq.com/你的SendKey.send</code>；<b>pushplus</b> 填 token。</div></li>
+      <li><span class="wish">直接发进邮箱</span><div class="meta">web3forms.com 输入邮箱得到 access_key，填 <b>emailKey</b>。</div></li>
+      <li><span class="wish">自己的接口</span><div class="meta">Cloudflare Worker / 云函数，填 <b>endpoint</b>，会收到 <code>{wish, at, from}</code> 的 POST。</div></li>
+      <li><span class="wish">手机订阅 ntfy</span><div class="meta">装 ntfy App → 订阅下面的主题 → 愿望会立刻推送并永久留在手机上。</div></li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(async () => {
+  'use strict';
+  const $ = s => document.querySelector(s);
+
+  /* ---- 从 js/app.js 里读配置，保证与站点用的是同一份（单点维护） ---- */
+  const FALLBACK = { email: '', ntfy: { server: 'https://ntfy.sh', topic: 'wish-ea0728407aae42b46894be3d' },
+                     feishu: '', serverchan: '', pushplus: '', emailKey: '', endpoint: '' };
+  function pickCfg(src) {
+    const i = src.indexOf('wish: {');
+    if (i < 0) return null;
+    const j = src.indexOf('{', i);
+    let d = 0, k = j;
+    for (; k < src.length; k++) {
+      if (src[k] === '{') d++;
+      else if (src[k] === '}') { d--; if (!d) break; }
+    }
+    try { return new Function('return (' + src.slice(j, k + 1) + ')')(); } catch (e) { return null; }
+  }
+  let CFG = FALLBACK;
+  try {
+    const src = await (await fetch('js/app.js', { cache: 'no-store' })).text();
+    CFG = pickCfg(src) || FALLBACK;
+  } catch (e) { /* file:// 打开时读不到，用内置默认值 */ }
+  const NT = CFG.ntfy || {};
+  document.title = '愿望收件箱';
+  $('#status').textContent = '主题：' + (NT.topic || '（未配置）');
+
+  const clock = t => {
+    const d = new Date(t), p = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function card(r, tags) {
+    const body = (r.wish || '').trim();
+    return '<li><div class="wish' + (body ? '' : ' empty') + '">' +
+      esc(body || '（TA 没有写字，只是悄悄许了一个愿）') + '</div>' +
+      '<div class="meta">' + (tags || '') + esc(r.at ? clock(r.at) : '') + '</div></li>';
+  }
+
+  /* ---- 云端：ntfy ---- */
+  async function loadCloud() {
+    const box = $('#cloud');
+    if (!NT.server || !NT.topic) { box.innerHTML = '<div class="empty-tip">还没配置 ntfy 主题。</div>'; return; }
+    box.innerHTML = '<div class="empty-tip">读取中…</div>';
+    try {
+      const url = NT.server.replace(/\/+$/, '') + '/' + encodeURIComponent(NT.topic) + '/json?poll=1&since=all';
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const txt = await r.text();
+      const rows = txt.split('\n').filter(Boolean).map(l => { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
+      const msgs = rows.filter(x => x.event === 'message' && x.message);
+      if (!msgs.length) { box.innerHTML = '<div class="empty-tip">云端暂时没有愿望（ntfy 只保留最近 12 小时）。</div>'; return; }
+      msgs.sort((a, b) => (b.time || 0) - (a.time || 0));
+      box.innerHTML = '<ul>' + msgs.map(m => {
+        const raw = String(m.message).replace(/\r/g, '');
+        const w = (raw.match(/愿望】\s*\n?([\s\S]*?)\n\n时间：/) || [])[1];
+        const t = (raw.match(/时间：\s*(.+)/) || [])[1];
+        return card({ wish: w != null ? w.trim() : raw, at: t }, '<span class="tag good">云端</span>');
+      }).join('') + '</ul>';
+    } catch (e) {
+      box.innerHTML = '<div class="empty-tip">读取失败：' + esc(e.message) + '（网络或主题名不对）</div>';
+    }
+  }
+
+  /* ---- 本机：localStorage 记录 ---- */
+  const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+  function loadLocal() {
+    const box = $('#local');
+    const all = read('wish:all', []), log = read('wish:log', []), pend = read('wish:pending', []);
+    if (!all.length && !log.length) { box.innerHTML = '<div class="empty-tip">这台设备上没有记录。</div>'; return; }
+    const byId = {};
+    log.forEach(l => { byId[l.id] = l; });
+    const list = all.slice().reverse().map(r => {
+      const l = byId[r.id];
+      const tags = l
+        ? '<span class="tag ' + (l.ok && l.ok.length ? 'good' : 'bad') + '">' +
+          (l.ok && l.ok.length ? '已送达 ' + esc(l.ok.join('/')) : '未送达 ' + esc((l.tried || []).join(' ') || '—')) + '</span>'
+        : '<span class="tag">本机</span>';
+      return card(r, tags);
+    });
+    if (pend.length) list.unshift('<li><div class="wish empty">有 ' + pend.length + ' 条还没送出去，打开一次正式网页就会自动重发。</div></li>');
+    box.innerHTML = '<ul>' + list.join('') + '</ul>';
+  }
+
+  /* ---- 通道自检 ---- */
+  async function selfTest() {
+    const st = $('#status');
+    st.textContent = '自检中…';
+    const rec = { id: 'test-' + Date.now(), wish: '（这是一条通道自检消息，可以忽略）', at: new Date().toISOString(), from: location.href };
+    const tell = '【生日网站 · 鸥黑米许下的愿望】\n' + rec.wish + '\n\n时间：' + clock(Date.now()) + '\n来自：' + rec.from;
+    const call = (url, opt, ms) => {
+      const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms || 9000);
+      return fetch(url, Object.assign({ signal: ac.signal }, opt)).finally(() => clearTimeout(t));
+    };
+    const json = (u, o) => call(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) });
+    const form = (u, o) => call(u, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(o).toString() });
+    const tests = [
+      ['ntfy', !NT.server || !NT.topic ? null : () => call(NT.server.replace(/\/+$/, '') + '/' + NT.topic, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: tell }).then(r => r.ok)],
+      ['feishu', !CFG.feishu ? null : () => json(CFG.feishu, { msg_type: 'text', content: { text: tell } }).then(r => r.ok)],
+      ['serverchan', !CFG.serverchan ? null : () => form(CFG.serverchan, { title: '生日网站 · 通道自检', desp: tell }).then(r => r.ok)],
+      ['pushplus', !CFG.pushplus ? null : () => json('https://www.pushplus.plus/send', { token: CFG.pushplus, title: '生日网站 · 通道自检', content: tell, template: 'txt' }).then(r => r.ok)],
+      ['mailbox', !CFG.emailKey ? null : () => json('https://api.web3forms.com/submit', { access_key: CFG.emailKey, subject: '生日网站 · 通道自检', from_name: '生日祝福网站', message: tell }).then(r => r.ok)],
+      ['endpoint', !CFG.endpoint ? null : () => json(CFG.endpoint, rec).then(r => r.ok)]
+    ].filter(x => x[1]);
+    if (!tests.length) { st.textContent = '没有可用通道'; return; }
+    const out = await Promise.all(tests.map(async ([n, fn]) => {
+      try { return n + (await fn() ? ' ✓' : ' ✗'); } catch (e) { return n + ' ✗' + ((e && e.name) || ''); }
+    }));
+    st.textContent = '自检结果：' + out.join(' · ');
+    if (out.some(x => x.indexOf('✓') > 0)) setTimeout(loadCloud, 1200);
+  }
+
+  /* ---- 解码 #wish= 链接 ---- */
+  function decode() {
+    const v = $('#link').value.trim();
+    const m = /[#&]wish=([^&\s]+)/.exec(v);
+    if (!m) { $('#decoded').textContent = '这条网址里没有 #wish=…'; return; }
+    try {
+      const bin = atob(m[1].replace(/-/g, '+').replace(/_/g, '/'));
+      const txt = new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0)));
+      $('#decoded').textContent = txt ? 'TA 写的是：「' + txt + '」' : '（这条链接里没有文字）';
+    } catch (e) { $('#decoded').textContent = '解析失败，可能链接被截断了。'; }
+  }
+
+  $('#refresh').addEventListener('click', () => { loadCloud(); loadLocal(); });
+  $('#test').addEventListener('click', selfTest);
+  $('#decode').addEventListener('click', decode);
+  $('#link').addEventListener('keydown', e => { if (e.key === 'Enter') decode(); });
+
+  loadCloud();
+  loadLocal();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) loadCloud(); });
+})();
+</script>
+</body>
+</html>

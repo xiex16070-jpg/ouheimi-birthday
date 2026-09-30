@@ -17,17 +17,25 @@ const CFG = {
   gallery: Array.from({ length: 12 }, (_, i) => `assets/img/g${String(i + 1).padStart(2, '0')}.jpg`),
   thumbs:  Array.from({ length: 12 }, (_, i) => `assets/img/t${String(i + 1).padStart(2, '0')}.jpg`),
 
-  /* 愿望回传（默认：一键「发邮件给我」直达 QQ 邮箱，无需任何第三方服务）
-     · 想让它全自动发送：填下面的 provider + key
-       - formsubmit（免注册，但今日实测服务端 500，暂不可用）
-       - web3forms：provider:'web3forms' + key:'access_key'（web3forms.com 输邮箱即给 key）
-       - formspree：provider:'formspree' + key:'表单ID'
-       - 自己的接口：endpoint:'https://...'（收到 {wish:"..."} 的 POST）
-     · 无论填不填，都会同时生成「愿望链接」和「愿望文字」，TA 复制发你也行 */
+  /* 愿望回传：TA 那边完全无感 —— 页面上不出现任何按钮/字眼，愿望在后台悄悄送达。
+     多个通道会同时尝试，任何一个成功就算送到；全都失败会在下次打开网站时自动重发。
+     · ntfy（已默认开启，零配置）：愿望进入下面这个私密主题。
+         怎么读：打开收件箱页 inbox-9f3k2q.html，或在手机 ntfy App 里订阅该主题。
+         注意：ntfy.sh 只缓存 12 小时，建议在 App 里订阅（会即时推送、永久留在手机上）。
+     · 想更稳、更持久（任填其一即可自动启用）：
+         feishu     飞书群「自定义机器人」webhook（推荐：国内网络稳，手机秒推）
+         serverchan Server酱：'https://sctapi.ftqq.com/你的SendKey.send'（推到微信）
+         pushplus   pushplus 的 token（推到微信）
+         emailKey   web3forms.com 输入上面的邮箱后给你的 access_key（直接进邮箱）
+         endpoint   你自己的接口（Cloudflare Worker / 云函数），收到 {wish, at, from} 的 POST
+     · 兜底：愿望同时被写进地址栏 #wish=xxxx，TA 若把网址转给你，你打开就能看到。 */
   wish: {
-    provider: '',                  // '' | 'formsubmit' | 'web3forms' | 'formspree'
-    email: '2103886050@qq.com',    // 「发邮件给我」的收件邮箱
-    key: '',
+    email: '2103886050@qq.com',                                       // 仅作留档/说明用
+    ntfy: { server: 'https://ntfy.sh', topic: 'wish-ea0728407aae42b46894be3d' },
+    feishu: '',
+    serverchan: '',
+    pushplus: '',
+    emailKey: '',
     endpoint: ''
   }
 };
@@ -599,49 +607,109 @@ const Wish = (() => {
     return location.origin + location.pathname + '#wish=' + enc(text);
   }
 
-  /* ---- 把愿望送到你的邮箱 ---- */
-  async function report(text) {
-    const c = CFG.wish || {};
-    let url = c.endpoint || '';
-    if (!url && c.provider === 'formsubmit' && c.email) url = 'https://formsubmit.co/ajax/' + c.email;
-    if (!url && c.provider === 'web3forms') url = 'https://api.web3forms.com/submit';
-    if (!url && c.provider === 'formspree' && c.key) url = 'https://formspree.io/f/' + c.key;
-    if (!url || !text) return 'local';
-
-    const subject = '生日网站 · 鸥黑米许下的愿望';
-    let body;
-    if (/formsubmit/.test(url)) {
-      // formsubmit：字段名照原样发过去，邮件里就是一张表
-      body = { 愿望: text, message: text, wish: text, _subject: subject, _template: 'table', _captcha: 'false' };
-    } else if (/web3forms/.test(url) || c.provider === 'web3forms') {
-      body = { access_key: c.key, subject, from_name: '生日网站', 愿望: text, wish: text };
-    } else {
-      body = { wish: text, 愿望: text, _subject: subject };
+  /* ============================================================
+     悄悄把愿望送回给你 —— 全程在后台完成，界面上不留任何痕迹
+     多通道并发，任一通道成功即算送达；全都失败就排队，下次打开网站自动重发
+     ============================================================ */
+  const Post = (() => {
+    const K_PENDING = 'wish:pending', K_ALL = 'wish:all', K_LOG = 'wish:log';
+    const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch (e) { return d; } };
+    const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+    const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const clock = () => {
+      const d = new Date(), p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    };
+    /* 送到你手机上时长这样 */
+    function tell(r) {
+      return '【生日网站 · 鸥黑米许下的愿望】\n' + (r.wish || '（TA 没有写字，只是悄悄许了一个愿）') +
+             '\n\n时间：' + clock() + '\n来自：' + r.from;
     }
-    try {
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(body)
-      });
-      return r.ok ? 'sent' : 'fail';
-    } catch (e) { return 'fail'; }
-  }
+    function call(url, opt, ms) {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), ms || 9000);
+      return fetch(url, Object.assign({ keepalive: true, signal: ac.signal }, opt)).finally(() => clearTimeout(t));
+    }
+    const json = (url, obj) => call(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) });
+    const form = (url, obj) => call(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(obj).toString() });
 
-  function store(v) {
-    try {
-      localStorage.setItem('wish:last', v);
-      const all = JSON.parse(localStorage.getItem('wish:all') || '[]');
-      all.push({ t: v, at: new Date().toISOString() });
-      localStorage.setItem('wish:all', JSON.stringify(all.slice(-20)));
-    } catch (e) {}
-  }
+    /* 每个通道：null = 没配置（跳过）；true / false = 试过，成功 / 失败 */
+    const CH = {
+      ntfy(r, c) {
+        if (!c.ntfy || !c.ntfy.server || !c.ntfy.topic) return null;
+        return call(c.ntfy.server.replace(/\/+$/, '') + '/' + c.ntfy.topic, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: tell(r)
+        }).then(x => x.ok);
+      },
+      feishu(r, c) {
+        if (!c.feishu) return null;
+        return json(c.feishu, { msg_type: 'text', content: { text: tell(r) } }).then(x => x.ok);
+      },
+      serverchan(r, c) {
+        if (!c.serverchan) return null;
+        return form(c.serverchan, { title: '生日网站 · 收到一个愿望', desp: tell(r).replace(/\n/g, '\n\n') }).then(x => x.ok);
+      },
+      pushplus(r, c) {
+        if (!c.pushplus) return null;
+        return json('https://www.pushplus.plus/send', { token: c.pushplus, title: '生日网站 · 收到一个愿望', content: tell(r), template: 'txt' }).then(x => x.ok);
+      },
+      mailbox(r, c) {
+        if (!c.emailKey) return null;
+        return json('https://api.web3forms.com/submit', {
+          access_key: c.emailKey, subject: '生日网站 · 收到一个愿望', from_name: '生日祝福网站',
+          botcheck: '', 愿望: r.wish, wish: r.wish, message: tell(r)
+        }).then(x => x.ok);
+      },
+      endpoint(r, c) {
+        if (!c.endpoint) return null;
+        return json(c.endpoint, { wish: r.wish, at: r.at, from: r.from, site: '生日祝福网站' }).then(x => x.ok);
+      }
+    };
+
+    async function tryAll(r) {
+      const c = CFG.wish || {};
+      return Promise.all(Object.keys(CH).map(async n => {
+        try { const v = await CH[n](r, c); return { ch: n, ok: v === true, skip: v === null }; }
+        catch (e) { return { ch: n, ok: false, skip: false, err: (e && e.name) || 'err' }; }
+      }));
+    }
+    const queue = () => read(K_PENDING, []);
+    const park = r => { save(K_PENDING, queue().filter(x => x.id !== r.id).concat([r]).slice(-30)); };
+    const unpark = id => save(K_PENDING, queue().filter(x => x.id !== id));
+
+    async function send(r) {
+      const res = await tryAll(r);
+      const ok = res.filter(x => x.ok).map(x => x.ch);
+      if (ok.length) unpark(r.id); else park(r);
+      const log = read(K_LOG, []);
+      log.push({
+        id: r.id, at: r.at, wish: r.wish, ok,
+        tried: res.filter(x => !x.skip).map(x => x.ch + (x.ok ? '✓' : '×' + (x.err || '')))
+      });
+      save(K_LOG, log.slice(-40));
+      return ok;
+    }
+    function keep(v) {
+      const r = { id: uid(), wish: v || '', at: new Date().toISOString(), from: location.origin + location.pathname };
+      save(K_ALL, read(K_ALL, []).concat([r]).slice(-50));
+      return r;
+    }
+    /* 以前没送出去的，趁现在补发 */
+    async function flush() {
+      const list = queue();
+      for (let i = 0; i < list.length; i++) await send(list[i]);
+    }
+    addEventListener('online', () => flush());
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) flush(); });
+    setTimeout(flush, 2500);
+
+    return { keep, send, flush, queue };
+  })();
+
   function showEcho(v) {
     echo.hidden = false;
-    echoText.textContent = v ? '「' + v + '」' : '（悄悄许下的愿望，已经风知道了）';
+    echoText.textContent = v ? '「' + v + '」' : '（悄悄许下的愿望，风已经知道了）';
     echo.dataset.wish = v || '';
-    const m = $('#wishMail');
-    if (m) m.href = mailtoHref(v);
   }
 
   function build() {
@@ -660,7 +728,7 @@ const Wish = (() => {
     hint.textContent = '点击蜡烛，把它点亮';
     hint.classList.remove('dim');
     card.classList.remove('show');
-    tip.textContent = '愿望会随着纸飞机飞出窗外，也许会飘到我这里';
+    tip.textContent = '愿望会随着纸飞机飞出窗外';
   }
   function sparkAt(el, n = 14) {
     const r = el.getBoundingClientRect(), box = sparks.getBoundingClientRect();
@@ -751,41 +819,15 @@ const Wish = (() => {
     Sfx.send();
     Petals.boost(2);
     setTimeout(() => fly(v, rect), 420);
-    store(v);
     showEcho(v);
     try { history.replaceState(null, '', v ? '#wish=' + enc(v) : location.pathname); } catch (e) {}
-    report(v).then(r => {
-      if (r === 'sent') Toast.show('愿望已经寄到我这里了 · 谢谢你');
-      else if (r === 'fail') Toast.show('网络不太顺，点「发邮件给我」也能送到');
-      else if ((CFG.wish && CFG.wish.email)) Toast.show('愿望已记下 · 点「发邮件给我」就能送到我手里', 4200);
-    });
+    if (v) Post.send(Post.keep(v));   // 悄悄送出：界面不提示、不出现任何「已发送」的字眼
   }
   send.addEventListener('click', () => finish(input.value));
   skip.addEventListener('click', () => finish(''));
   input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(input.value); } });
 
-  /* 复制愿望 / 发邮件 / 复制愿望链接 */
-  $('#wishCopy').addEventListener('click', async () => {
-    const v = echo.dataset.wish || currentWish;
-    const txt = v ? '鸥黑米的愿望：' + v : '鸥黑米许了一个不能说出口的愿望';
-    try { await navigator.clipboard.writeText(txt); Toast.show('愿望内容已复制'); }
-    catch (e) { Toast.show('复制失败，可以长按选中文字'); }
-  });
-  /* 一键把愿望发到指定邮箱（无需任何第三方服务） */
-  function mailtoHref(v) {
-    const to = (CFG.wish && CFG.wish.email) || '';
-    const subj = '生日网站 · 鸥黑米写下的愿望';
-    const body = v
-      ? 'TA 写下的愿望：' + v + '\n\n（这封来自生日网站的纸飞机）'
-      : 'TA 没有写下文字，只是悄悄许了一个愿望。\n\n（这封来自生日网站的纸飞机）';
-    return 'mailto:' + to + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
-  }
-  $('#wishMail').addEventListener('click', () => {
-    $('#wishMail').href = mailtoHref(echo.dataset.wish || currentWish);
-  });
-  $('#wishMail').href = mailtoHref('');
-
-  /* 打开带 #wish= 的链接：看到 TA 的愿望 */
+  /* 打开带 #wish= 的链接（只有你会这样打开）：安静地把 TA 的愿望显示出来 */
   (function fromHash() {
     const m = /[#&]wish=([^&]+)/.exec(location.hash);
     if (!m) return;
@@ -793,7 +835,6 @@ const Wish = (() => {
     if (!v) return;
     currentWish = v; sent = true;
     showEcho(v);
-    setTimeout(() => Toast.show('收到一个愿望：' + v, 6000), 1400);
   })();
 
   return {
