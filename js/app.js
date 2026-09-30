@@ -393,7 +393,7 @@ const Lightbox = (() => {
     if (!open) return;
     open = false;
     box.classList.remove('on');
-    setTimeout(() => { box.hidden = true; img.removeAttribute('src'); }, 300);
+    setTimeout(() => { box.hidden = true; }, 300);
   }
   function step(d) { i = (i + d + list.length) % list.length; render(); }
   box.addEventListener('click', e => { if (e.target !== img) hide(); });
